@@ -40,7 +40,7 @@ base-build:
 	             --target PYTHON ./images/ \
 	             $$BUILD_ARGS; \
 	docker build --tag openwisp/openwisp-base:latest \
-	             --file ./images/openwisp_base/Dockerfile ./images/ \
+	             --file ./images/openwisp_base/Dockerfile ./images/ --no-cache\
 	             $$BUILD_ARGS
 
 nfs-build:
@@ -77,7 +77,7 @@ clean:
 				openwisp/openwisp-base:intermedia-python \
 				openwisp/openwisp-nfs:latest \
 				`docker images -f "dangling=true" -q` \
-				`docker images | grep openwisp/docker-openwisp | tr -s ' ' | cut -d ' ' -f 3` &> /dev/null
+				`docker images | grep openwisp/docker-openwisp | tr -s ' ' | cut -d ' ' -f 2` &> /dev/null
 
 # Production
 start:
