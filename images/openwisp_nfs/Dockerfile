@@ -1,9 +1,9 @@
-FROM alpine:3.20
+FROM alpine:3.23
 
 # hadolint ignore=DL3018
 RUN apk add --no-cache --update --verbose \
-            tzdata~=2024b-r0 \
-            nfs-utils~=2.6.4-r1 && \
+            tzdata \
+            nfs-utils && \
     rm -rf /var/cache/apk/* /tmp/*
 
 COPY ./openwisp_nfs/init_command.sh /init_command.sh

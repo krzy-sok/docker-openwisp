@@ -8,19 +8,22 @@ from utils import uwsgi_curl
 
 
 def database_status():
+    import psycopg
+
     try:
-        psycopg2.connect(
-            dbname=os.environ['DB_NAME'],
-            user=os.environ['DB_USER'],
-            password=os.environ['DB_PASS'],
-            host=os.environ['DB_HOST'],
-            port=os.environ['DB_PORT'],
-            sslmode=os.environ['DB_SSLMODE'],
-            sslcert=os.environ['DB_SSLCERT'],
-            sslkey=os.environ['DB_SSLKEY'],
-            sslrootcert=os.environ['DB_SSLROOTCERT'],
-        )
-    except psycopg2.OperationalError:
+        with psycopg.connect(
+            dbname=os.environ["DB_NAME"],
+            user=os.environ["DB_USER"],
+            password=os.environ["DB_PASS"],
+            host=os.environ["DB_HOST"],
+            port=os.environ["DB_PORT"],
+            sslmode=os.environ["DB_SSLMODE"],
+            sslcert=os.environ["DB_SSLCERT"],
+            sslkey=os.environ["DB_SSLKEY"],
+            sslrootcert=os.environ["DB_SSLROOTCERT"],
+        ):
+            pass
+    except psycopg.OperationalError:
         time.sleep(3)
         return False
     else:
@@ -47,13 +50,20 @@ def dashboard_status():
 
 def redis_status():
     kwargs = {}
-    redis_pass = os.environ.get('REDIS_PASS')
-    redis_port = os.environ.get('REDIS_PORT', 6379)
+    redis_user = os.environ.get("REDIS_USER")
+    redis_pass = os.environ.get("REDIS_PASS")
+    redis_port = os.environ.get("REDIS_PORT", 6379)
+    redis_use_tls = os.environ.get("REDIS_USE_TLS", "False").lower() == "true"
+
+    if redis_user:
+        kwargs["username"] = redis_user
     if redis_pass:
-        kwargs['password'] = redis_pass
+        kwargs["password"] = redis_pass
     if redis_port:
-        kwargs['port'] = redis_port
-    rs = redis.Redis(os.environ['REDIS_HOST'], **kwargs)
+        kwargs["port"] = redis_port
+    if redis_use_tls:
+        kwargs["ssl"] = redis_use_tls
+    rs = redis.Redis(os.environ["REDIS_HOST"], **kwargs)
     try:
         rs.ping()
     except redis.ConnectionError:
@@ -67,8 +77,6 @@ if __name__ == "__main__":
     arguments = sys.argv[1:]
     # Database Connection
     if "database" in arguments:
-        import psycopg2
-
         print("Waiting for database to become available...")
         connected = False
         while not connected:

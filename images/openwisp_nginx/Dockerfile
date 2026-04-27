@@ -1,10 +1,11 @@
-FROM nginx:1.27.3-alpine
+FROM nginx:1.29.5-alpine
 
+# hadolint ignore=DL3018
 RUN apk add --update --no-cache \
-            openssl~=3.3.4-r0 \
-            py3-pip~=24.0-r2 \
-            certbot~=2.10.0-r1 \
-            certbot-nginx~=2.10.0-r1 && \
+            py3-pip \
+            certbot \
+            certbot-nginx \
+            openssl && \
     rm -rf /var/cache/apk/* /tmp/*
 
 WORKDIR /etc/nginx/
@@ -25,7 +26,6 @@ ENV MODULE_NAME=nginx \
     DOLLAR=$ \
     TZ=UTC \
     SSL_CERT_MODE=Yes \
-    CERT_ADMIN_EMAIL=example@example.com \
     NGINX_HTTP2=http2 \
     NGINX_CLIENT_BODY_SIZE=30 \
     NGINX_ADMIN_ALLOW_NETWORK=all \
@@ -43,6 +43,7 @@ ENV MODULE_NAME=nginx \
     NGINX_GZIP_TYPES='text/plain image/svg+xml application/json application/javascript text/xml text/css application/xml application/x-font-ttf font/opentype' \
     NGINX_CUSTOM_FILE=False \
     NINGX_REAL_REMOTE_ADDR='$real_ip' \
+    NGINX_SSL_PORT=443 \
     # USWGI pass_port
     DASHBOARD_APP_PORT=8000 \
     API_APP_PORT=8001 \

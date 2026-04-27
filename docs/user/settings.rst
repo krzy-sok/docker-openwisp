@@ -72,24 +72,16 @@ properly on your system.
   <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>`__.
 - **Default:** ``UTC``.
 
-``CERT_ADMIN_EMAIL``
-~~~~~~~~~~~~~~~~~~~~
-
-- **Explanation:** Required by certbot. Email used for registration and
-  recovery contact.
-- **Valid Values:** A comma separated list of valid email addresses.
-- **Default:** ``example@example.com``.
-
 ``SSL_CERT_MODE``
 ~~~~~~~~~~~~~~~~~
 
-- **Explanation:** Flag to enable or disable HTTPs. If it is set to
+- **Explanation:** Flag to enable or disable HTTPS. If it is set to
   ``Yes``, letsencrypt certificates are automatically fetched with the
   help of certbot and a cronjob to ensure they stay updated is added. If
-  it is set to ``SelfSigned``, self-signed certificates are used and
-  cronjob for the certificates is set. If set to ``No``, site is
-  accessible via HTTP, if set if ``EXTERNAL``, it tells HTTPs is used but
-  managed by external tool like loadbalancer / provider. Setting this
+  it is set to ``SelfSigned``, self-signed certificates are used and a
+  cronjob for the certificates is set. If set to ``No``, the site is
+  accessible via HTTP. If set to ``External``, it tells HTTPS is used but
+  managed by an external tool like a loadbalancer/provider. Setting this
   option as ``No`` is not recommended and might break some features, only
   do it when you know what you are doing.
 - **Valid Values:** ``External``, ``Yes``, ``SelfSigned``, ``No``.
@@ -399,6 +391,19 @@ framework.
 - **Valid Values:** STRING.
 - **Default:** ``--concurrency=1``.
 
+``CELERY_SERVICE_NETWORK_MODE``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **Explanation:** Controls the Docker network mode for `celery` and
+  `celery_monitoring` workers. Default ``service:openvpn`` shares the
+  OpenVPN container's network namespace so workers can reach VPN-connected
+  devices. Set to an empty string ``""`` to use the default bridge network
+  when you need direct LAN access to devices (the auto-install script sets
+  this to ``""`` if OpenVPN is disabled).
+- **Valid Values:** Docker network mode (e.g. ``service:<name>``,
+  ``host``) or empty string (``""``).
+- **Default:** ``service:openvpn``
+
 ``OPENWISP_CUSTOM_OPENWRT_IMAGES``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -459,6 +464,33 @@ framework.
   details.
 - **Valid Values:** ``True``, ``False``.
 - **Default:** ``False``.
+
+``REDIS_CACHE_URL``
+~~~~~~~~~~~~~~~~~~~
+
+- **Explanation:** Allows freely redefining the Redis database URL for the
+  Django cache.
+- **Valid Values:** STRING.
+- **Default:**
+  ``redis://<REDIS_USER>:<REDIS_PASS>@<REDIS_HOST>:<REDIS_PORT>/0``.
+
+``CHANNEL_REDIS_URL``
+~~~~~~~~~~~~~~~~~~~~~
+
+- **Explanation:** Allows freely redefining the Redis database URL for
+  Django Channels' layer.
+- **Valid Values:** STRING.
+- **Default:**
+  ``redis://<REDIS_USER>:<REDIS_PASS>@<REDIS_HOST>:<REDIS_PORT>/1``.
+
+``CELERY_BROKER_URL``
+~~~~~~~~~~~~~~~~~~~~~
+
+- **Explanation:** Allows freely redefining the Redis database URL for the
+  Celery broker.
+- **Valid Values:** STRING.
+- **Default:**
+  ``redis://<REDIS_USER>:<REDIS_PASS>@<REDIS_HOST>:<REDIS_PORT>/2``.
 
 DJANGO_LOG_LEVEL
 ~~~~~~~~~~~~~~~~
@@ -842,6 +874,26 @@ Nginx
 - **Example:** ``index index.html index.htm;``.
 - **Default:** ``""`` (empty string).
 
+``NGINX_SSL_PORT``
+~~~~~~~~~~~~~~~~~~
+
+- **Explanation:** Nginx container external HTTPS port. Change if, for
+  example, OpenWISP runs behind a reverse proxy listening on port 443 on
+  the same host. Non-default ports are incompatible with
+  ``SSL_CERT_MODE=Yes``.
+- **Valid Values:** ``INTEGER``.
+- **Default:** ``443``.
+
+``NGINX_PORT``
+~~~~~~~~~~~~~~
+
+- **Explanation:** Nginx container external HTTP port. Change if, for
+  example, OpenWISP runs behind a reverse proxy listening on port 80 on
+  the same host. Non-default ports are incompatible with
+  ``SSL_CERT_MODE=Yes``.
+- **Valid Values:** ``INTEGER``.
+- **Default:** ``80``.
+
 ``NGINX_GZIP_SWITCH``
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -980,7 +1032,7 @@ X509 Certificates
 - **Explanation:** ISO code of the country of issuance of the certificate.
 - **Valid Values:** Country code, see list `here
   <https://countrycode.org/>`__.
-- **Default:** ``IN``.
+- **Default:** ``CH``.
 
 ``X509_STATE``
 ~~~~~~~~~~~~~~
@@ -988,14 +1040,14 @@ X509 Certificates
 - **Explanation:** Name of the state / province of issuance of the
   certificate.
 - **Valid Values:** STRING.
-- **Default:** ``Delhi``.
+- **Default:** ``Geneva``.
 
 ``X509_CITY``
 ~~~~~~~~~~~~~
 
 - **Explanation:** Name of the city of issuance of the certificate.
 - **Valid Values:** STRING.
-- **Default:** ``New Delhi``.
+- **Default:** ``Geneva``.
 
 ``X509_ORGANIZATION_NAME``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1044,12 +1096,26 @@ Misc Services
 - **Valid Values:** INTEGER.
 - **Default:** ``6379``.
 
+``REDIS_USER``
+~~~~~~~~~~~~~~
+
+- **Explanation:** Redis username, optional.
+- **Valid Values:** STRING.
+- **Default:** ``""`` (empty string).
+
 ``REDIS_PASS``
 ~~~~~~~~~~~~~~
 
 - **Explanation:** Redis password, optional.
 - **Valid Values:** STRING.
 - **Default:** ``None``.
+
+``REDIS_USE_TLS``
+~~~~~~~~~~~~~~~~~
+
+- **Explanation:** Whether to use TLS for redis connection.
+- **Valid Values:** ``True``, ``False``.
+- **Default:** ``False``.
 
 ``DASHBOARD_APP_SERVICE``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1123,3 +1189,12 @@ NFS Server
 - **Valid Values:** STRING.
 - **Default:**
   ``10.0.0.0/8(rw,fsid=0,insecure,no_root_squash,no_subtree_check,sync)``.
+
+``COLLECTSTATIC_WHEN_DEPS_CHANGE``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **Description:** Runs ``collectstatic`` at container startup only if
+  Python dependencies have changed. Set to ``false`` if you're using the
+  development version of the OpenWISP python modules.
+- **Accepted Values:** ``true``, ``false``
+- **Default:** ``true``

@@ -117,8 +117,8 @@ setup_docker_openwisp() {
 		echo -ne ${GRN}"(4/5) Site manager email: "${NON}
 		read django_default_email
 		# SSL Configuration
-		echo -ne ${GRN}"(5/5) Enter letsencrypt email (leave blank for self-signed certificate): "${NON}
-		read letsencrypt_email
+		echo -ne ${GRN}"(5/5) Use Let's Encrypt SSL? (y/N, blank for no): "${NON}
+		read use_letsencrypt
 	else
 		cp $env_path $ENV_USER &>>$LOG_FILE
 	fi
@@ -148,8 +148,10 @@ setup_docker_openwisp() {
 		# VPN domain
 		if [[ -z "$vpn_domain" ]]; then
 			set_env "VPN_DOMAIN" "openvpn.${domain}"
+			set_env CELERY_SERVICE_NETWORK_MODE "service:openvpn"
 		elif [[ "${vpn_domain,,}" == "n" ]]; then
-			set_env "VPN_DOMAIN" "example.com"
+			set_env "VPN_DOMAIN" ""
+			set_env CELERY_SERVICE_NETWORK_MODE ""
 		else
 			set_env "VPN_DOMAIN" "$vpn_domain"
 		fi
@@ -159,11 +161,11 @@ setup_docker_openwisp() {
 		python3 $INSTALL_PATH/build.py change-secret-key >/dev/null
 		python3 $INSTALL_PATH/build.py change-database-credentials >/dev/null
 		# SSL Configuration
-		set_env "CERT_ADMIN_EMAIL" "$letsencrypt_email"
-		if [[ -z "$letsencrypt_email" ]]; then
-			set_env "SSL_CERT_MODE" "SelfSigned"
-		else
+		use_letsencrypt_lower=$(echo "$use_letsencrypt" | tr '[:upper:]' '[:lower:]')
+		if [[ "$use_letsencrypt_lower" == "y" || "$use_letsencrypt_lower" == "yes" ]]; then
 			set_env "SSL_CERT_MODE" "Yes"
+		else
+			set_env "SSL_CERT_MODE" "SelfSigned"
 		fi
 		# Other
 		hostname=$(echo "$django_default_email" | cut -d @ -f 2)
@@ -247,8 +249,8 @@ init_setup() {
 		echo -e "  - 2GB RAM (Minimum)"
 		echo -e "  - Root privileges"
 		echo -e "  - Supported systems"
-		echo -e "    - Debian: 10 & 11"
-		echo -e "    - Ubuntu 18.04, 18.10, 20.04 & 22.04"
+		echo -e "    - Debian: 11, 12 & 13"
+		echo -e "    - Ubuntu 22.04 & 24.04"
 		echo -e ${YLW}"\nYou can use -u\--upgrade if you are upgrading from an older version.\n"${NON}
 	fi
 
@@ -265,11 +267,11 @@ init_setup() {
 	apt -qq --yes install lsb-release &>>$LOG_FILE
 	system_id=$(lsb_release --id --short)
 	system_release=$(lsb_release --release --short)
-	incompatible_message="$system_id $system_release is not support. Installation might fail, continue anyway? (Y/n): "
+	incompatible_message="$system_id $system_release is not supported. Installation might fail, continue anyway? (Y/n): "
 
 	if [[ "$system_id" == "Debian" || "$system_id" == "Ubuntu" ]]; then
 		case "$system_release" in
-		18.04 | 20.04 | 22.04 | 10 | 11 | 12)
+		22.04 | 24.04 | 11 | 12 | 13)
 			if [[ "$1" == "upgrade" ]]; then
 				report_ok && upgrade_debian
 			else
@@ -295,8 +297,8 @@ init_help() {
 	echo -e "  - 2GB RAM (Minimum)"
 	echo -e "  - Root privileges"
 	echo -e "  - Supported systems"
-	echo -e "    - Debian: 10 & 11"
-	echo -e "    - Ubuntu 18.04, 18.10, 20.04, 22.04\n"
+	echo -e "    - Debian: 11, 12 & 13"
+	echo -e "    - Ubuntu 22.04 & 24.04\n"
 	echo -e "  -i\--install : (default) Install OpenWISP"
 	echo -e "  -u\--upgrade : Change OpenWISP version already setup with this script"
 	echo -e "  -h\--help    : See this help message"
