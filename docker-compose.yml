@@ -148,8 +148,8 @@ services:
     env_file:
       - .env
     ports:
-      - "1812:1812/udp"
-      - "1813:1813/udp"
+      - 1812:1812/udp
+      - 1813:1813/udp
     depends_on:
       - postgres
       - api
@@ -216,6 +216,11 @@ services:
     volumes:
       - redis_data:/data
 
+  antisniff:
+    build:
+      context: images
+      dockerfile: antisniff/Dockerfile
+
 volumes:
   influxdb_data: {}
   postgres_data: {}
@@ -228,6 +233,7 @@ volumes:
 
 networks:
   default:
+    name: wisp-network
     ipam:
       config:
         - subnet: 172.18.0.0/16
